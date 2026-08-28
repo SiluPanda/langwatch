@@ -1746,6 +1746,11 @@ const presentations = {
     describe: (error) =>
       `${scenarioFieldLabel(error)} references a parameter in a way we can't read. Check it is written as params.name, then try again.`,
   },
+  scenario_reserved_set_id: {
+    title: "This run can't be saved to that set",
+    describe: () =>
+      "That set belongs to LangWatch and holds a run plan's results. Leave the set empty for a one-off run, or give the run a set name of your own.",
+  },
   scenario_run_export_unauthenticated: {
     title: "Log in to export simulation runs",
     describe: () =>
@@ -1795,14 +1800,14 @@ const presentations = {
   scenario_stale_version: {
     // Nothing was written: the save is refused before the update, so the copy
     // can promise the customer's own edit is still theirs to redo.
-    title: "This test case changed since you loaded it",
+    title: "This scenario changed since you loaded it",
     describe: () =>
       "Reload to pick up the latest version, then make your change again.",
   },
   scenario_version_not_found: {
     title: "That version is not available",
     describe: () =>
-      "It may have been removed. Open the history to see what this test case still has.",
+      "It may have been removed. Open the history to see what this scenario still has.",
   },
   // ---- billing ----
   billing_customer_email_required: {
@@ -2424,14 +2429,14 @@ const presentations = {
     describe: () => "Edit the plan to remove them.",
   },
   suite_scope_empty: {
-    title: "This run plan covers no test case",
+    title: "This run plan covers no scenario",
     describe: () =>
       "Its scope matches nothing right now. Widen it in the plan, then run again.",
   },
   suite_scope_not_allowed: {
     title: "A test suite takes no scope",
     describe: () =>
-      "It runs the test cases filed in it. File cases into it to change what it covers.",
+      "It runs the scenarios filed in it. File cases into it to change what it covers.",
   },
   suite_targets_required: {
     title: "Choose an agent to run against",
@@ -2959,6 +2964,65 @@ const presentations = {
   provider_timeout: {
     title: "The model provider timed out",
     describe: () => "Try again in a moment.",
+  },
+  /*
+   * The three below used to reach customers as provider_timeout — "try again
+   * in a moment" for a settings mistake that would repeat forever. Each one
+   * names the setting to change instead, and the model from `meta` where it
+   * narrows the answer.
+   *
+   * They deliberately do NOT name the provider. `meta.provider` carries the
+   * dispatch engine's own id ("vertex", "vllm"), which is not a name to show
+   * anyone, and turning it into one needs a table. The app already has two and
+   * they disagree: `server/modelProviders/registry` calls Bedrock "Bedrock" and
+   * is what Settings → Model Providers renders, while
+   * `features/onboarding/regions/model-providers/registry` calls it "AWS
+   * Bedrock". A third table here would have disagreed with both, and a name the
+   * customer cannot find on the page this copy sends them to is worse than no
+   * name at all. Importing the one Settings renders is not open either: it
+   * statically pulls the model catalog (`loadModelCatalog` → `llmModels.json`,
+   * ~570 KB) into every bundle that renders an error message.
+   *
+   * Little is lost. The gateway's remediation tips already name the provider
+   * and its credential artefact ("Vertex AI authenticates with a Google Cloud
+   * service-account JSON document, not an API key…"), so the customer still
+   * learns which provider failed — from the line that also tells them what to
+   * do about it. Name it here once one client-safe provider-name module exists.
+   */
+  provider_credential_invalid: {
+    // "Can't be used" rather than "not accepted": nothing reached the provider,
+    // so nobody accepted or refused anything. The sibling code below is the one
+    // the provider actually judged, and the two titles have to say which is
+    // which or the split buys nothing.
+    title: "Those provider credentials can't be used",
+    describe: () =>
+      "The credentials saved for this provider could not be used to authenticate. Check them in Settings → Model Providers.",
+  },
+  provider_credential_rejected: {
+    title: "The model provider rejected its credentials",
+    describe: () =>
+      "The provider received the credentials and refused them, so the account behind them is what to check — not their format.",
+  },
+  provider_config_invalid: {
+    title: "This provider is not set up to serve that model",
+    describe: (error) => {
+      const model = str(error, "model", "");
+      if (model) {
+        return `No provider on this project is configured for ${model}. Add it to one in Settings → Model Providers.`;
+      }
+      return "Add the model to this provider in Settings → Model Providers, or send the request to a provider that serves it.";
+    },
+  },
+  provider_connection_failed: {
+    // Distinct from the app's `provider_unreachable`, which is a credential
+    // CHECK finding nothing answering. This one is a real request that never
+    // left, so the copy must not say anything about a key being unchecked.
+    title: "The model provider could not be reached",
+    describe: () => "Try again in a moment.",
+  },
+  request_abandoned: {
+    title: "The request was cancelled before the provider answered",
+    describe: () => "Send it again if you still need the answer.",
   },
   chain_exhausted: {
     title: "Every provider failed",

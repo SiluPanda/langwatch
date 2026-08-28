@@ -1110,7 +1110,7 @@ const appConfig = defineConfig({
             borderColor: "border",
             borderRadius: "lg",
             boxShadow: "lg",
-            "& button:not([data-variant=ghost]):not([data-part])": {
+            "& button[data-variant=solid], & button[data-variant=outline]": {
               boxShadow: "md",
             },
             "& input, & textarea, & select": {
